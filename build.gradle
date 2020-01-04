@@ -60,6 +60,7 @@ model {
             sources.cpp {
                 source {
                     srcDir 'src/main/cpp'
+                    srcDir 'src/main/include/Stardust'
                     include '**/*.cpp', '**/*.cc'
                 }
                 exportedHeaders {

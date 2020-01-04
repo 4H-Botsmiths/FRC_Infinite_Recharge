@@ -159,7 +159,11 @@ imgui.ini
 
 # End of https://www.gitignore.io/api/c++,java,linux,macos,gradle,windows,visualstudiocode
 
+# Infinite Recharge related excludes
+
 gradlew*
 gradle/
 .vscode/
 .wpilib
+
+src/main/include/StarDust

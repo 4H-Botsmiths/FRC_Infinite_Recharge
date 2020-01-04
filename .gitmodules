@@ -1,0 +1,4 @@
+[submodule "src/main/include/StarDust"]
+	path = src/main/include/StarDust
+	url = git@github.com:FRC-4309/StarDust.git
+	branch = master
