@@ -10,21 +10,34 @@
 #include <string>
 
 #include <frc/TimedRobot.h>
+#include <frc/Talon.h>
 #include <frc/smartdashboard/SendableChooser.h>
 
-class Robot : public frc::TimedRobot {
- public:
-  void RobotInit() override;
-  void RobotPeriodic() override;
-  void AutonomousInit() override;
-  void AutonomousPeriodic() override;
-  void TeleopInit() override;
-  void TeleopPeriodic() override;
-  void TestPeriodic() override;
+#include "StarDust/motor/BetterMotor.hpp"
+#include "StarDust/core/StarDustRobot.hpp"
 
- private:
-  frc::SendableChooser<std::string> m_chooser;
-  const std::string kAutoNameDefault = "Default";
-  const std::string kAutoNameCustom = "My Auto";
-  std::string m_autoSelected;
+class Robot : public frc::TimedRobot {
+public:
+	void RobotInit() override;
+	void RobotPeriodic() override;
+	void AutonomousInit() override;
+	void AutonomousPeriodic() override;
+	void TeleopInit() override;
+	void TeleopPeriodic() override;
+	void TestPeriodic() override;
+
+private:
+	//frc::Talon motor_0 { 0 };
+	BetterMotor motor_0 { false, 0 };
+	BetterMotor motor_1 { true, 0 };
+
+	StarDustRobot starDustRobot {{
+		&motor_0,
+		&motor_1
+	}};
+
+	//frc::SendableChooser<std::string> m_chooser;
+	//const std::string kAutoNameDefault = "Default";
+	//const std::string kAutoNameCustom = "My Auto";
+	//std::string m_autoSelected;
 };
