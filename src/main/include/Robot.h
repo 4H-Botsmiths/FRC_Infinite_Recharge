@@ -15,6 +15,11 @@
 
 #include "StarDust/motor/BetterMotor.hpp"
 #include "StarDust/core/StarDustRobot.hpp"
+#include "StarDust/drive/DriveSpider.hpp"
+#include "StarDust/sensor/motion/BetterGyro.hpp"
+#include "StarDust/pneumatics/BetterDoubleSolenoid.hpp"
+#include "StarDust/control/BetterController.hpp"
+#include "StarDust/drive/DriveAUX.hpp"
 
 class Robot : public frc::TimedRobot {
 public:
@@ -25,19 +30,49 @@ public:
 	void TeleopInit() override;
 	void TeleopPeriodic() override;
 	void TestPeriodic() override;
+	void DisabledInit() override;
 
 private:
-	//frc::Talon motor_0 { 0 };
-	BetterMotor motor_0 { false, 0 };
-	BetterMotor motor_1 { true, 0 };
+	BetterGyro gyro;
 
-	StarDustRobot starDustRobot {{
-		&motor_0,
-		&motor_1
+	BetterMotor driveMotor0 { 0 };
+	BetterMotor driveMotor1 { 1 };
+	BetterMotor driveMotor2 { 2 };
+	BetterMotor driveMotor3 { 3 };
+	BetterDoubleSolenoid driveRocker { 0, 1 };
+
+	DriveSpider drivetrain {
+		&driveMotor0,
+		&driveMotor1,
+		&driveMotor2,
+		&driveMotor3,
+		&driveRocker
+	};
+
+	DriveAUX driveAUX {
+		&drivetrain,
+		&gyro,
+		0
+	};
+
+	BetterController xboxController { 0, 0.15, 0.15, {
+		{BetterController::on::RightBumperPressed, [=]{
+			drivetrain.useNormal();
+		}},
+		{BetterController::on::RightBumperReleased, [=]{
+			drivetrain.useMecanum();
+		}}
 	}};
 
-	//frc::SendableChooser<std::string> m_chooser;
-	//const std::string kAutoNameDefault = "Default";
-	//const std::string kAutoNameCustom = "My Auto";
-	//std::string m_autoSelected;
+	StarDustRobot starDustRobot{{
+		&gyro,
+		&driveMotor0,
+		&driveMotor1,
+		&driveMotor2,
+		&driveMotor3,
+		&driveRocker,
+		&drivetrain,
+		&driveAUX,
+		&xboxController
+	}};
 };
