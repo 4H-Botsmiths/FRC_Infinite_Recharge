@@ -10,16 +10,17 @@
 #include <string>
 
 #include <frc/TimedRobot.h>
-#include <frc/Talon.h>
-#include <frc/smartdashboard/SendableChooser.h>
+#include <rev/CANSparkMax.h>
 
-#include "StarDust/motor/BetterMotor.hpp"
+#include "StarDust/sensor/vision/limelight/Limelight.hpp"
+#include "StarDust/pneumatics/DoubleSolenoid.hpp"
+#include "StarDust/sensor/motion/AHRS_Gyro.hpp"
+#include "StarDust/control/XboxController.hpp"
 #include "StarDust/core/StarDustRobot.hpp"
 #include "StarDust/drive/DriveSpider.hpp"
-#include "StarDust/sensor/motion/BetterGyro.hpp"
-#include "StarDust/pneumatics/BetterDoubleSolenoid.hpp"
-#include "StarDust/control/BetterController.hpp"
-#include "StarDust/drive/DriveAUX.hpp"
+#include "StarDust/motor/MotorGroup.hpp"
+#include "StarDust/logging/CSV.hpp"
+#include "StarDust/motor/Motor.hpp"
 
 class Robot : public frc::TimedRobot {
 public:
@@ -33,46 +34,45 @@ public:
 	void DisabledInit() override;
 
 private:
-	BetterGyro gyro;
+	Limelight limelight;
 
-	BetterMotor driveMotor0 { 0 };
-	BetterMotor driveMotor1 { 1 };
-	BetterMotor driveMotor2 { 2 };
-	BetterMotor driveMotor3 { 3 };
-	BetterDoubleSolenoid driveRocker { 0, 1 };
+	DoubleSolenoid driveRocker { 0, 1, true };
+	DoubleSolenoid intakeArm { 4, 5 };
+
+	rev::CANSparkMax motor1 { 1, rev::CANSparkMax::MotorType::kBrushless };
+	rev::CANSparkMax motor2 { 2, rev::CANSparkMax::MotorType::kBrushless };
+	rev::CANSparkMax motor3 { 3, rev::CANSparkMax::MotorType::kBrushless };
+	rev::CANSparkMax motor4 { 4, rev::CANSparkMax::MotorType::kBrushless };
 
 	DriveSpider drivetrain {
-		&driveMotor0,
-		&driveMotor1,
-		&driveMotor2,
-		&driveMotor3,
+		&motor1,
+		&motor2,
+		&motor3,
+		&motor4,
 		&driveRocker
 	};
 
-	DriveAUX driveAUX {
-		&drivetrain,
-		&gyro,
-		0
-	};
-
-	BetterController xboxController { 0, 0.15, 0.15, {
-		{BetterController::on::RightBumperPressed, [=]{
-			drivetrain.useNormal();
-		}},
-		{BetterController::on::RightBumperReleased, [=]{
-			drivetrain.useMecanum();
-		}}
+	Motor shooterRight { 0, true };
+	Motor shooterLeft { 1, true };
+	MotorGroup shooter {{
+		&shooterLeft,
+		&shooterRight
 	}};
 
-	StarDustRobot starDustRobot{{
-		&gyro,
-		&driveMotor0,
-		&driveMotor1,
-		&driveMotor2,
-		&driveMotor3,
-		&driveRocker,
+	Motor ballBeltLower { 2, true };
+	Motor ballBeltUpper { 3, 0.5, true };
+	MotorGroup ballBelt {{
+		&ballBeltLower,
+		&ballBeltUpper
+	}};
+
+	Motor ballIntake { 4, true };
+
+	XboxController xboxController { 0, 0.15, 0.15 };
+
+	StarDustRobot starDustRobot {{
 		&drivetrain,
-		&driveAUX,
-		&xboxController
+		&xboxController,
+		&limelight
 	}};
 };

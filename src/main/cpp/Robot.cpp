@@ -7,15 +7,17 @@
 
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <cameraserver/CameraServer.h>
-#include <iostream>
 
 #include "Robot.h"
-
-#include "StarDust/control/BetterController.hpp"
 
 void Robot::RobotInit() {
     frc::CameraServer::GetInstance()->StartAutomaticCapture(0);
     frc::CameraServer::GetInstance()->StartAutomaticCapture(1);
+
+    motor1.RestoreFactoryDefaults();
+    motor2.RestoreFactoryDefaults();
+    motor3.RestoreFactoryDefaults();
+    motor4.RestoreFactoryDefaults();
 }
 
 void Robot::RobotPeriodic() {
@@ -36,6 +38,20 @@ void Robot::TeleopInit() {
 
 void Robot::TeleopPeriodic() {
     starDustRobot.TeleopPeriodic();
+
+    if (xboxController.GetAButton()) {
+        ballBelt.Set(1);
+    }
+    else {
+        ballBelt.Set(0);
+    }
+
+    if (xboxController.GetBButton()) {
+        shooter.Set(0.5);
+    }
+    else {
+        shooter.Set(0);
+    }
 
     drivetrain.drive(&xboxController);
 }
