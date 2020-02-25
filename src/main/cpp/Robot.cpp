@@ -14,10 +14,12 @@ void Robot::RobotInit() {
     frc::CameraServer::GetInstance()->StartAutomaticCapture(0);
     frc::CameraServer::GetInstance()->StartAutomaticCapture(1);
 
-    motor1.RestoreFactoryDefaults();
-    motor2.RestoreFactoryDefaults();
-    motor3.RestoreFactoryDefaults();
-    motor4.RestoreFactoryDefaults();
+    motorNW.RestoreFactoryDefaults();
+    motorNE.RestoreFactoryDefaults();
+    motorSE.RestoreFactoryDefaults();
+    motorSW.RestoreFactoryDefaults();
+
+    driveRocker.ClearAllPCMStickyFaults();
 }
 
 void Robot::RobotPeriodic() {
@@ -39,21 +41,65 @@ void Robot::TeleopInit() {
 void Robot::TeleopPeriodic() {
     starDustRobot.TeleopPeriodic();
 
-    if (xboxController.GetAButton()) {
-        ballBelt.Set(1);
+    if (auxController.GetTriggerRightDeadzone() > 0) {
+        intakeArm.Extend();
+
+        Timer tmp { 0.1 };
+        tmp.Start();
+
+        ballIntake.Set(BALL_INTAKE_SPEED);
+    }
+    else {
+        intakeArm.Retract();
+        ballIntake.Set(0);
+    }
+
+    shooter.Set(
+        auxController.GetAButton() ? SHOOTER_SPEED : 0
+    );
+
+    if (auxController.GetLeftBumper()) {
+        ballBelt.Set(-BALL_BELT_SPEED);
+    }
+    else if (auxController.GetRightBumper()) {
+        ballBelt.Set(BALL_BELT_SPEED);
     }
     else {
         ballBelt.Set(0);
     }
 
-    if (xboxController.GetBButton()) {
-        shooter.Set(0.5);
+    if (driveController.GetTriggerRightDeadzone() > 0) drivetrain.useNormal();
+    else drivetrain.useMecanum();
+
+    if ((driveController.GetTriggerLeftDeadzone() > 0)) {
+        limelight.turnLightsOn();
+
+        if (limelight.getTV()) {
+            const double targetX=limelight.getTX();
+            const double range=2;
+            const double turnMultiplier=0.01;
+
+            if (!(-range < targetX && targetX < range)) {
+                if (targetX < 0) {
+                    drivetrain.drive(
+                        0,
+                        -TURN_THRESHOLD - ( -targetX * turnMultiplier )
+                    );
+                }
+                else {
+                    drivetrain.drive(
+                        0,
+                        TURN_THRESHOLD + ( targetX * turnMultiplier )
+                    );
+                }
+            }
+        }
     }
     else {
-        shooter.Set(0);
-    }
+        limelight.turnLightsOff();
 
-    drivetrain.drive(&xboxController);
+        driveAUX.drive(&driveController);
+    }
 }
 
 void Robot::TestPeriodic() {

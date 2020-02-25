@@ -17,9 +17,11 @@
 #include "StarDust/sensor/motion/AHRS_Gyro.hpp"
 #include "StarDust/control/XboxController.hpp"
 #include "StarDust/core/StarDustRobot.hpp"
+#include "StarDust/file/ConfigParser.hpp"
 #include "StarDust/drive/DriveSpider.hpp"
+#include "StarDust/file/ParserParam.hpp"
 #include "StarDust/motor/MotorGroup.hpp"
-#include "StarDust/logging/CSV.hpp"
+#include "StarDust/drive/DriveAUX.hpp"
 #include "StarDust/motor/Motor.hpp"
 
 class Robot : public frc::TimedRobot {
@@ -36,20 +38,29 @@ public:
 private:
 	Limelight limelight;
 
-	DoubleSolenoid driveRocker { 0, 1, true };
-	DoubleSolenoid intakeArm { 4, 5 };
+	DoubleSolenoid driveRocker { 0, 1, false };
+	DoubleSolenoid intakeArm { 4, 5, true };
 
-	rev::CANSparkMax motor1 { 1, rev::CANSparkMax::MotorType::kBrushless };
-	rev::CANSparkMax motor2 { 2, rev::CANSparkMax::MotorType::kBrushless };
-	rev::CANSparkMax motor3 { 3, rev::CANSparkMax::MotorType::kBrushless };
-	rev::CANSparkMax motor4 { 4, rev::CANSparkMax::MotorType::kBrushless };
+	rev::CANSparkMax motorNW { 5, rev::CANSparkMax::MotorType::kBrushless };
+	rev::CANSparkMax motorNE { 2, rev::CANSparkMax::MotorType::kBrushless };
+	rev::CANSparkMax motorSE { 3, rev::CANSparkMax::MotorType::kBrushless };
+	rev::CANSparkMax motorSW { 4, rev::CANSparkMax::MotorType::kBrushless };
+
+	AHRS_Gyro gyro;
 
 	DriveSpider drivetrain {
-		&motor1,
-		&motor2,
-		&motor3,
-		&motor4,
+		&motorNW,
+		&motorNE,
+		&motorSE,
+		&motorSW,
 		&driveRocker
+	};
+
+	double TURN_THRESHOLD=0.05;
+	DriveAUX driveAUX {
+		&drivetrain,
+		&gyro,
+		TURN_THRESHOLD
 	};
 
 	Motor shooterRight { 0, true };
@@ -58,21 +69,39 @@ private:
 		&shooterLeft,
 		&shooterRight
 	}};
+	double SHOOTER_SPEED=1;
 
 	Motor ballBeltLower { 2, true };
-	Motor ballBeltUpper { 3, 0.5, true };
+	Motor ballBeltUpper { 3, 0.75, true };
+
 	MotorGroup ballBelt {{
 		&ballBeltLower,
 		&ballBeltUpper
 	}};
+	double BALL_BELT_SPEED=0.85;
 
 	Motor ballIntake { 4, true };
+	double BALL_INTAKE_SPEED=0.5;
 
-	XboxController xboxController { 0, 0.15, 0.15 };
+	XboxController driveController { 0, 0.15, 0.15 };
+	XboxController auxController { 1, 0.15, 0.15 };
+
+	ConfigParser config {{
+		new ParserParam { "TURN_THRESHOLD", &TURN_THRESHOLD },
+		new ParserParam { "SHOOTER_SPEED", &SHOOTER_SPEED },
+		new ParserParam { "BALL_BELT_SPEED", &BALL_BELT_SPEED },
+		new ParserParam { "BALL_INTAKE_SPEED", &BALL_INTAKE_SPEED }
+	}};
 
 	StarDustRobot starDustRobot {{
+		&limelight,
 		&drivetrain,
-		&xboxController,
-		&limelight
+		&gyro,
+		&driveAUX,
+		&driveController,
+		&auxController,
+		&driveRocker,
+		&intakeArm,
+		&config
 	}};
 };
