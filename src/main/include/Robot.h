@@ -11,6 +11,7 @@
 
 #include <frc/TimedRobot.h>
 #include <rev/CANSparkMax.h>
+#include <frc/DigitalInput.h>
 
 #include "StarDust/sensor/vision/limelight/Limelight.hpp"
 #include "StarDust/pneumatics/DoubleSolenoid.hpp"
@@ -69,7 +70,7 @@ private:
 		&shooterLeft,
 		&shooterRight
 	}};
-	double SHOOTER_SPEED=1;
+	double SHOOTER_SPEED=0.70;
 
 	Motor ballBeltLower { 2, true };
 	Motor ballBeltUpper { 3, 0.75, true };
@@ -104,4 +105,6 @@ private:
 		&intakeArm,
 		&config
 	}};
+
+	frc::DigitalInput magazineFullDetector { 0 };
 };

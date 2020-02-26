@@ -28,6 +28,8 @@ void Robot::RobotPeriodic() {
 
 void Robot::AutonomousInit() {
     starDustRobot.AutonomousInit();
+
+    drivetrain.drive(0, 0.3, 0, 3);
 }
 
 void Robot::AutonomousPeriodic() {
@@ -41,18 +43,14 @@ void Robot::TeleopInit() {
 void Robot::TeleopPeriodic() {
     starDustRobot.TeleopPeriodic();
 
-    if (auxController.GetTriggerRightDeadzone() > 0) {
-        intakeArm.Extend();
-
-        Timer tmp { 0.1 };
-        tmp.Start();
-
+    if (auxController.GetTriggerRightDeadzone() > 0 && intakeArm.isExtended()) {
         ballIntake.Set(BALL_INTAKE_SPEED);
     }
     else {
-        intakeArm.Retract();
         ballIntake.Set(0);
     }
+
+    if (auxController.GetBButtonPressed()) intakeArm.Invert();
 
     shooter.Set(
         auxController.GetAButton() ? SHOOTER_SPEED : 0
@@ -96,9 +94,20 @@ void Robot::TeleopPeriodic() {
         }
     }
     else {
-        limelight.turnLightsOff();
+        //limelight.turnLightsOff();
 
-        driveAUX.drive(&driveController);
+        int pov=driveController.GetPOV();
+
+        if (pov==-1) {
+            driveAUX.drive(&driveController);
+        }
+        else {
+            driveAUX.driveGyro(
+                pov,
+                2,
+                &driveController
+            );
+        }
     }
 }
 
