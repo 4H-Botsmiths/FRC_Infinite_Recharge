@@ -7,6 +7,7 @@
 
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <cameraserver/CameraServer.h>
+#include <iostream>
 
 #include "Robot.h"
 
@@ -29,7 +30,7 @@ void Robot::RobotPeriodic() {
 void Robot::AutonomousInit() {
     starDustRobot.AutonomousInit();
 
-    drivetrain.drive(0, 0.3, 0, 3);
+    drivetrain.drive(0, -0.3, 0, 3);
 }
 
 void Robot::AutonomousPeriodic() {
@@ -45,12 +46,18 @@ void Robot::TeleopPeriodic() {
 
     if (auxController.GetTriggerRightDeadzone() > 0 && intakeArm.isExtended()) {
         ballIntake.Set(BALL_INTAKE_SPEED);
+
+        //lower beam broken and mag not full
+        if (!lowerBallDetector.Get() && magazineFullDetector.Get()) {
+            ballBelt.Set(BALL_BELT_SPEED);
+        }
+        else {
+            ballBelt.Set(0);
+        }
     }
     else {
         ballIntake.Set(0);
     }
-
-    if (auxController.GetBButtonPressed()) intakeArm.Invert();
 
     shooter.Set(
         auxController.GetAButton() ? SHOOTER_SPEED : 0
@@ -69,44 +76,47 @@ void Robot::TeleopPeriodic() {
     if (driveController.GetTriggerRightDeadzone() > 0) drivetrain.useNormal();
     else drivetrain.useMecanum();
 
-    if ((driveController.GetTriggerLeftDeadzone() > 0)) {
+    if (driveController.GetTriggerLeftDeadzone() > 0) {
         limelight.turnLightsOn();
 
         if (limelight.getTV()) {
             const double targetX=limelight.getTX();
-            const double range=2;
-            const double turnMultiplier=0.01;
 
-            if (!(-range < targetX && targetX < range)) {
+            if (!(-LIMELIGHT_RANGE < targetX && targetX < LIMELIGHT_RANGE)) {
                 if (targetX < 0) {
                     drivetrain.drive(
                         0,
-                        -TURN_THRESHOLD - ( -targetX * turnMultiplier )
+                        -TURN_THRESHOLD - ( -targetX * LIMELIGHT_TURN_MULT )
                     );
                 }
                 else {
                     drivetrain.drive(
                         0,
-                        TURN_THRESHOLD + ( targetX * turnMultiplier )
+                        TURN_THRESHOLD + ( targetX * LIMELIGHT_TURN_MULT )
                     );
                 }
             }
         }
     }
     else {
-        //limelight.turnLightsOff();
+        limelight.turnLightsOff();
 
         int pov=driveController.GetPOV();
 
-        if (pov==-1) {
-            driveAUX.drive(&driveController);
+        if (usingGyroMode) {
+            if (pov==-1) {
+                driveAUX.drive(&driveController);
+            }
+            else {
+                driveAUX.driveGyro(
+                    pov,
+                    2,
+                    &driveController
+                );
+            }
         }
         else {
-            driveAUX.driveGyro(
-                pov,
-                2,
-                &driveController
-            );
+            drivetrain.drive(&driveController);
         }
     }
 }

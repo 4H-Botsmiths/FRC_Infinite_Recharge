@@ -12,6 +12,7 @@
 #include <frc/TimedRobot.h>
 #include <rev/CANSparkMax.h>
 #include <frc/DigitalInput.h>
+#include <frc/AnalogInput.h>
 
 #include "StarDust/sensor/vision/limelight/Limelight.hpp"
 #include "StarDust/pneumatics/DoubleSolenoid.hpp"
@@ -38,8 +39,11 @@ public:
 
 private:
 	Limelight limelight;
+	double LIMELIGHT_RANGE=2;
+	double LIMELIGHT_TURN_MULT=0.01;
 
 	DoubleSolenoid driveRocker { 0, 1, false };
+
 	DoubleSolenoid intakeArm { 4, 5, true };
 
 	rev::CANSparkMax motorNW { 5, rev::CANSparkMax::MotorType::kBrushless };
@@ -64,8 +68,8 @@ private:
 		TURN_THRESHOLD
 	};
 
-	Motor shooterRight { 0, true };
-	Motor shooterLeft { 1, true };
+	Motor shooterRight { 1, true };
+	Motor shooterLeft { 0, true };
 	MotorGroup shooter {{
 		&shooterLeft,
 		&shooterRight
@@ -84,14 +88,25 @@ private:
 	Motor ballIntake { 4, true };
 	double BALL_INTAKE_SPEED=0.5;
 
-	XboxController driveController { 0, 0.15, 0.15 };
-	XboxController auxController { 1, 0.15, 0.15 };
+	XboxController driveController { 0, 0.15, 0.15, {
+		{ XboxController::on::BackButtonPressed, [=]{
+			usingGyroMode=!usingGyroMode;
+		}}
+	}};
+
+	XboxController auxController { 1, 0.15, 0.15, {
+		{ XboxController::on::BButtonPressed, [=]{
+			intakeArm.Invert();
+		}}
+	}};
 
 	ConfigParser config {{
 		new ParserParam { "TURN_THRESHOLD", &TURN_THRESHOLD },
 		new ParserParam { "SHOOTER_SPEED", &SHOOTER_SPEED },
 		new ParserParam { "BALL_BELT_SPEED", &BALL_BELT_SPEED },
-		new ParserParam { "BALL_INTAKE_SPEED", &BALL_INTAKE_SPEED }
+		new ParserParam { "BALL_INTAKE_SPEED", &BALL_INTAKE_SPEED },
+		new ParserParam { "LIMELIGHT_RANGE", &LIMELIGHT_RANGE },
+		new ParserParam { "LIMELIGHT_TURN_MULT", &LIMELIGHT_TURN_MULT }
 	}};
 
 	StarDustRobot starDustRobot {{
@@ -107,4 +122,7 @@ private:
 	}};
 
 	frc::DigitalInput magazineFullDetector { 0 };
+	frc::DigitalInput lowerBallDetector { 1 };
+
+	bool usingGyroMode=true;
 };
