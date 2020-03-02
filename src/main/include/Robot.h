@@ -37,6 +37,8 @@ public:
 	void TestPeriodic() override;
 	void DisabledInit() override;
 
+	void limelightAlign();
+
 private:
 	Limelight limelight;
 	double LIMELIGHT_RANGE=2;

@@ -30,7 +30,19 @@ void Robot::RobotPeriodic() {
 void Robot::AutonomousInit() {
     starDustRobot.AutonomousInit();
 
-    drivetrain.drive(0, -0.3, 0, 3);
+    //untested auto code :(
+
+    //rev shooter wheels, start aligning
+    //shooter.Set(SHOOTER_SPEED);
+    //Timer { true, [=]{ limelightAlign(); }, 3.0 };
+    //limelight.turnLightsOff();
+
+    //move belt and stop shooting
+    //ballBelt.Set(BALL_BELT_SPEED, 3);
+    //shooter.Set(0);
+
+    //move off auto line
+    drivetrain.drive(0, -0.3, 0, 2);
 }
 
 void Robot::AutonomousPeriodic() {
@@ -77,26 +89,7 @@ void Robot::TeleopPeriodic() {
     else drivetrain.useMecanum();
 
     if (driveController.GetTriggerLeftDeadzone() > 0) {
-        limelight.turnLightsOn();
-
-        if (limelight.getTV()) {
-            const double targetX=limelight.getTX();
-
-            if (!(-LIMELIGHT_RANGE < targetX && targetX < LIMELIGHT_RANGE)) {
-                if (targetX < 0) {
-                    drivetrain.drive(
-                        0,
-                        -TURN_THRESHOLD - ( -targetX * LIMELIGHT_TURN_MULT )
-                    );
-                }
-                else {
-                    drivetrain.drive(
-                        0,
-                        TURN_THRESHOLD + ( targetX * LIMELIGHT_TURN_MULT )
-                    );
-                }
-            }
-        }
+        limelightAlign();
     }
     else {
         limelight.turnLightsOff();
@@ -126,6 +119,29 @@ void Robot::TestPeriodic() {
 }
 
 void Robot::DisabledInit() {}
+
+void Robot::limelightAlign() {
+    limelight.turnLightsOn();
+
+    if (limelight.getTV()) {
+        const double targetX=limelight.getTX();
+
+        if (!(-LIMELIGHT_RANGE < targetX && targetX < LIMELIGHT_RANGE)) {
+            if (targetX < 0) {
+                drivetrain.drive(
+                    0,
+                    -TURN_THRESHOLD - ( -targetX * LIMELIGHT_TURN_MULT )
+                );
+            }
+            else {
+                drivetrain.drive(
+                    0,
+                    TURN_THRESHOLD + ( targetX * LIMELIGHT_TURN_MULT )
+                );
+            }
+        }
+    }
+}
 
 #ifndef RUNNING_FRC_TESTS
 int main() { return frc::StartRobot<Robot>(); }
